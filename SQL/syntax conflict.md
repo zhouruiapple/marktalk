@@ -51,7 +51,7 @@ dollar              = "$"
 
 ### Conclusion
 
-influxdb目前不支持`美元引用的字符串常量`和`位置参数`，`$`不作为字母。
+- influxdb目前不支持`美元引用的字符串常量`和`位置参数`，`$`不作为字母。
 
 > Conflict: ***NO***
 
@@ -73,7 +73,7 @@ quoted_identifier   = `"` unicode_char { unicode_char } `"` .
 
 ### Conclusion
 
-influxdb标识符不包含`$`。postgresql标识符中可以包含`$`，但是不推荐使用`$`。
+- influxdb标识符不包含`$`。postgresql标识符中可以包含`$`，但是不推荐使用`$`。
 
 > Conflict: ***NO***
 
@@ -102,7 +102,7 @@ WRITE
 
 ### Conclusion
 
-influxdb关键字不是postgresql的真子集，如MEASUREMENT，MEASUREMENTS，REPLICATION等，未来postgresql扩展时，可能会冲突。
+- influxdb关键字不是postgresql的真子集，如MEASUREMENT，MEASUREMENTS，REPLICATION等，未来postgresql扩展时，可能会冲突。
 
 > Conflict: ***YES***
 
@@ -122,9 +122,9 @@ influxdb关键字不是postgresql的真子集，如MEASUREMENT，MEASUREMENTS，
 
 ### Conclusion
 
-influxdb的符号集合是postgresql的真子集，无冲突。
+- influxdb的符号集合是postgresql的真子集，无冲突。
 
-> Conflict: ***NO**
+> Conflict: ***NO***
 
 # Literal
 
@@ -151,7 +151,7 @@ string_line         = `'` { unicode_char } `'` .
 
 ### Conclusion
 
-`\'`转义符和多行拼接字符串涉及词法解析冲突。
+- `\'`转义符和多行拼接字符串涉及词法解析冲突。
 
 > Conflict: ***YES***
 
@@ -171,7 +171,7 @@ int_lit             = ( "1" … "9" ) { digit } .
 
 ### Conclusion
 
-postgresql区分32位和64位，根据值域选择。influxdb只支持64位。
+- postgresql区分32位和64位，根据值域选择。influxdb只支持64位。
 
 > Conflict: ***NO***
 
@@ -193,7 +193,7 @@ float_basic         = int_lit "." int_lit
 ```
 ### Conclusion
 
-postgresql中一个不包含小数点和指数的数字常量的值适合类型integer（32 位），它首先被假定为类型integer。否则如果它的值适合类型bigint（64 位），它被假定为类型bigint。再否则它会被取做类型numeric。包含小数点和/或指数的常量总是首先被假定为类型numeric。
+- postgresql中一个不包含小数点和指数的数字常量的值适合类型integer（32 位），它首先被假定为类型integer。否则如果它的值适合类型bigint（64 位），它被假定为类型bigint。再否则它会被取做类型numeric。包含小数点和/或指数的常量总是首先被假定为类型numeric。
 
 > Conflict: ***YES***
 
@@ -257,7 +257,7 @@ time_lit            = "YYYY-MM-DD hh:mm:ss.p" | "YYYY-MM-DD" .
 
 ### Conclusion
 
-postgresql的日期和时间的输入可以接受几乎任何合理的格式，包括 ISO 8601、SQL-兼容的和其他的形式。influxdb的日期时间格式只支持ISO 8601。
+- postgresql的日期和时间的输入可以接受几乎任何合理的格式，包括 ISO 8601、SQL-兼容的和其他的形式。influxdb的日期时间格式只支持RFC 3339。
 
 > Conflict: ***NO***
 
@@ -277,7 +277,7 @@ bool_lit            = TRUE | FALSE .
 
 ### Conclusion
 
-postgresql的类型转换支持将一下字符串表示位”真“或”假“状态：
+- postgresql的类型转换支持将一下字符串表示位”真“或”假“状态：
 
 | TRUE | FALSE |
 | --- | --- |
@@ -305,15 +305,173 @@ regex_line         = `'` { unicode_char } `'` .
 
 ### Conclusion
 
-postgresql在[模式匹配](http://postgres.cn/docs/14/functions-matching.html)定义正则表达式为字符串。
+- postgresql在[模式匹配](http://postgres.cn/docs/14/functions-matching.html)定义正则表达式为字符串。
 
 > Conflict: ***YES***
 
 # Queries
 
+### influxdb
+```EBNF
+query               = statement { ";" statement } .
+statement           = alter_retention_policy_stmt |
+                      create_continuous_query_stmt |
+                      create_database_stmt |
+                      create_retention_policy_stmt |
+                      create_subscription_stmt |
+                      create_user_stmt |
+                      delete_stmt |
+                      drop_continuous_query_stmt |
+                      drop_database_stmt |
+                      drop_measurement_stmt |
+                      drop_retention_policy_stmt |
+                      drop_series_stmt |
+                      drop_shard_stmt |
+                      drop_subscription_stmt |
+                      drop_user_stmt |
+                      explain_stmt |
+                      explain_analyze_stmt |
+                      grant_stmt |
+                      kill_query_statement |
+                      revoke_stmt |
+                      select_stmt |
+                      show_continuous_queries_stmt |
+                      show_databases_stmt |
+                      show_diagnostics_stmt |
+                      show_field_key_cardinality_stmt |
+                      show_field_keys_stmt |
+                      show_grants_stmt |
+                      show_measurement_cardinality_stmt |
+                      show_measurement_exact_cardinality_stmt |
+                      show_measurements_stmt |
+                      show_queries_stmt |
+                      show_retention_policies_stmt |
+                      show_series_cardinality_stmt |
+                      show_series_exact_cardinality_stmt |
+                      show_series_stmt |
+                      show_shard_groups_stmt |
+                      show_shards_stmt |
+                      show_stats_stmt |
+                      show_subscriptions_stmt |
+                      show_tag_key_cardinality_stmt |
+                      show_tag_key_exact_cardinality_stmt |
+                      show_tag_keys_stmt |
+                      show_tag_values_stmt |
+                      show_tag_values_cardinality_stmt |
+                      show_users_stmt .
+```
+
+### postgresql
+
+参考支持的[SQL 命令](http://postgres.cn/docs/14/sql-commands.html)
+```EBNF
+query               = statement { ";" statement } .
+statement           = /* SQL 命令 */ .
+```
+
 # Statements
 
+## SELECT
+
+### influxdb
+
+```EBNF
+select_stmt = 
+SELECT select_list_clause 
+    from_clause
+    [ into_clause ]
+    [ where_clause ]
+    [ group_by_clause ] 
+    [ order_by_clause ]
+    [ limit_clause ]
+    [ offset_clause ]
+    [ slimit_clause ]
+    [ soffset_clause ]
+    [ timezone_clause ] .
+```
+
+### postgresql
+
+```EBNF
+select_stmt = [ WITH [ RECURSIVE ] with_query [, ...] ]
+SELECT select_list_clause
+    [ from_clause ]
+    [ where_clause ]
+    [ group_by_clause ]
+    [ HAVING condition ]
+    [ WINDOW window_name AS ( window_definition ) [, ...] ]
+    [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]
+    [ order_by_clause ]
+    [ limit_clause ]
+    [ offset_clause ]
+    [ FETCH { FIRST | NEXT } [ count ] { ROW | ROWS } { ONLY | WITH TIES } ]
+    [ FOR { UPDATE | NO KEY UPDATE | SHARE | KEY SHARE } [ OF table_name [, ...] ] [ NOWAIT | SKIP LOCKED ] [...] ]
+```
+
+### Conclusion
+
+- influxdb的子句集合不是postgresql的子句集合的子集，当postgresql扩展时可能会存在冲突。
+- 当子句冲突时，必然存在冲突。
+
+> Conflict: ***YES***
+
 # Clauses
+
+## select_list_clause
+
+### influxdb
+
+```EBNF
+select_list_clause     = [ * | expr_as_list ] .
+expr_as_list           = expression [ AS identify ] {, expression [ AS identify ]} .
+```
+
+### postgresql
+
+```EBNF
+select_list_clause     = [ ALL | DISTINCT [ ON ( expr_list ) ] ] [ * | expr_as_list ] .
+expr_list              = expression {, expression} .
+expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] identify ]} .
+```
+
+### Conclusion
+
+- expr_as_list语法存在冲突。
+
+> conflict: ***YES***
+
+## from_clause
+
+### influxdb
+
+```EBNF
+from_clause     = FROM from_items .
+from_items      = from_item {, from_item} .
+from_item       = measurement | select_stmt .
+measurement     = identify {"." identify} .
+```
+
+### postgresql
+
+```EBNF
+from_clause     = FROM from_items .
+from_items      = from_item {, from_item} .
+from_item       =
+    [ ONLY ] table_name [ * ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
+    [ TABLESAMPLE sampling_method ( argument [, ...] ) [ REPEATABLE ( seed ) ] ]
+    [ LATERAL ] ( select ) [ AS ] alias [ ( column_alias [, ...] ) ]
+    with_query_name [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
+    [ LATERAL ] function_name ( [ argument [, ...] ] )
+                [ WITH ORDINALITY ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
+    [ LATERAL ] function_name ( [ argument [, ...] ] ) [ AS ] alias ( column_definition [, ...] )
+    [ LATERAL ] function_name ( [ argument [, ...] ] ) AS ( column_definition [, ...] )
+    [ LATERAL ] ROWS FROM( function_name ( [ argument [, ...] ] ) [ AS ( column_definition [, ...] ) ] [, ...] )
+                [ WITH ORDINALITY ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
+    from_item [ NATURAL ] join_type from_item [ ON join_condition | USING ( join_column [, ...] ) ] .
+table_name     = identify {"." identify} .
+```
+
+### Conclusion
 
 # Exceptions
 
