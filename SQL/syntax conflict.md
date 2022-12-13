@@ -377,7 +377,8 @@ statement           = /* SQL 命令 */ .
 
 ```EBNF
 select_stmt = 
-SELECT select_list_clause 
+SELECT select_list_clause
+    [ into_clause ]
     from_clause
     [ into_clause ]
     [ where_clause ]
@@ -395,6 +396,7 @@ SELECT select_list_clause
 ```EBNF
 select_stmt = [ WITH [ RECURSIVE ] with_query [, ...] ]
 SELECT select_list_clause
+    [ into_clause ]
     [ from_clause ]
     [ where_clause ]
     [ group_by_clause ]
@@ -417,19 +419,19 @@ SELECT select_list_clause
 
 # Clauses
 
-## select_list_clause
+## SELECT_LIST_CLAUSE
 
 ### influxdb
 
 ```EBNF
-select_list_clause     = [ * | expr_as_list ] .
+select_list_clause     = [ "*" | expr_as_list ] .
 expr_as_list           = expression [ AS identify ] {, expression [ AS identify ]} .
 ```
 
 ### postgresql
 
 ```EBNF
-select_list_clause     = [ ALL | DISTINCT [ ON ( expr_list ) ] ] [ * | expr_as_list ] .
+select_list_clause     = [ ALL | DISTINCT [ ON ( expr_list ) ] ] [ "*" | expr_as_list ] .
 expr_list              = expression {, expression} .
 expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] identify ]} .
 ```
@@ -440,15 +442,23 @@ expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] i
 
 > conflict: ***YES***
 
-## from_clause
+## INTO_CLAUSE
+
+### 
+
+## FROM_CLAUSE
 
 ### influxdb
 
 ```EBNF
 from_clause     = FROM from_items .
 from_items      = from_item {, from_item} .
-from_item       = measurement | select_stmt .
-measurement     = identify {"." identify} .
+from_item       = item_table | item_subquery | item_cte | item_join .
+item_join       = from_item join_type from_item [ ON expression ] .
+item_table      = table_name [ AS identify ] .
+item_subquery   = "(" select_stmt ")" [ AS identify ] .
+join_type       = FULL [ OUTER ] JOIN .
+table_name      = identify {"." identify} .
 ```
 
 ### postgresql
@@ -456,22 +466,59 @@ measurement     = identify {"." identify} .
 ```EBNF
 from_clause     = FROM from_items .
 from_items      = from_item {, from_item} .
-from_item       =
-    [ ONLY ] table_name [ * ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
-    [ TABLESAMPLE sampling_method ( argument [, ...] ) [ REPEATABLE ( seed ) ] ]
-    [ LATERAL ] ( select ) [ AS ] alias [ ( column_alias [, ...] ) ]
-    with_query_name [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
-    [ LATERAL ] function_name ( [ argument [, ...] ] )
-                [ WITH ORDINALITY ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
-    [ LATERAL ] function_name ( [ argument [, ...] ] ) [ AS ] alias ( column_definition [, ...] )
-    [ LATERAL ] function_name ( [ argument [, ...] ] ) AS ( column_definition [, ...] )
-    [ LATERAL ] ROWS FROM( function_name ( [ argument [, ...] ] ) [ AS ( column_definition [, ...] ) ] [, ...] )
-                [ WITH ORDINALITY ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
-    from_item [ NATURAL ] join_type from_item [ ON join_condition | USING ( join_column [, ...] ) ] .
-table_name     = identify {"." identify} .
+from_item       = item_table | item_subquery | item_cte | item_join .
+item_join       = from_item [ NATURAL ] join_type from_item [ ( ON expression ) | ( USING "(" identify {"," identify} ")" ) ] .
+item_table      = [ ONLY ] table_name [ "*" ] [ [ AS ] identify [ "(" identify {"," identify} ")" ] ]
+    [ TABLESAMPLE identify "(" expression {"," expression} ")" [ REPEATABLE "(" expression ")" ] ] .
+item_subquery   = [ LATERAL ] "(" select_stmt ")" [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
+item_cte        = identify [ [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
+join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER ] JOIN ) | ( FULL [ OUTER ] JOIN ) | ( CROSS JOIN ) .
+table_name      = identify {"." identify} .
 ```
 
 ### Conclusion
+
+- postgresql支持函数调用出现在FROM子句中，由于influxdb不支持且复杂，目前不分析。
+- from_items在postgresql中将多个源表进行笛卡尔积运算，在influxdb中降多个源表进行集合并运算。
+
+> Conflict: ***YES***
+
+## WHERE_CLAUSE
+
+### influxdb
+
+```EBNF
+where_clause    = WHERE expression .
+```
+
+### postgresql
+
+```EBNF
+where_clause    = WHERE expression .
+```
+
+### Conclusion
+
+> Conflict: ***NO***
+
+## GROUP_BY_CLAUSE
+
+### influxdb
+
+```EBNF
+group_by_clause     = GROUP BY dimensions fill(fill_option) .
+grouping_element    = 
+```
+
+### postgresql
+
+```EBNF
+GROUP BY grouping_element [, ...]
+```
+
+### Conclusion
+
+> Conflict: ***NO***
 
 # Exceptions
 
