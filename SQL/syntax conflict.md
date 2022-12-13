@@ -444,7 +444,25 @@ expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] i
 
 ## INTO_CLAUSE
 
-### 
+### influxdb
+
+```EBNF
+into_clause     = INTO ( table_name | back_ref ).
+back_ref        = ( identify ".:MEASUREMENT" ) |
+                   ( identify "." [ identify ] ".:MEASUREMENT" ) .
+table_name      = identify {"." identify} .
+```
+
+### postgresql
+
+```EBNF
+into_clause     = INTO [ TEMPORARY | TEMP | UNLOGGED ] [ TABLE ] table_name .
+table_name      = identify {"." identify} .
+```
+
+### Conclusion
+
+> Conflict: ***NO***
 
 ## FROM_CLAUSE
 
@@ -458,7 +476,6 @@ item_join       = from_item join_type from_item [ ON expression ] .
 item_table      = table_name [ AS identify ] .
 item_subquery   = "(" select_stmt ")" [ AS identify ] .
 join_type       = FULL [ OUTER ] JOIN .
-table_name      = identify {"." identify} .
 ```
 
 ### postgresql
@@ -473,7 +490,6 @@ item_table      = [ ONLY ] table_name [ "*" ] [ [ AS ] identify [ "(" identify {
 item_subquery   = [ LATERAL ] "(" select_stmt ")" [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
 item_cte        = identify [ [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
 join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER ] JOIN ) | ( FULL [ OUTER ] JOIN ) | ( CROSS JOIN ) .
-table_name      = identify {"." identify} .
 ```
 
 ### Conclusion
@@ -506,19 +522,54 @@ where_clause    = WHERE expression .
 ### influxdb
 
 ```EBNF
-group_by_clause     = GROUP BY dimensions fill(fill_option) .
-grouping_element    = 
+group_by_clause     = GROUP BY grouping_element [ fill "(" fill_option ")" ] .
+fill_option         = "null" | "none" | "previous" | int_lit | float_lit | "linear" .
+grouping_element    = identify {, identify}
 ```
 
 ### postgresql
 
 ```EBNF
-GROUP BY grouping_element [, ...]
+group_by_clause     = GROUP BY grouping_element
+grouping_element    = identify {, identify}
 ```
 
 ### Conclusion
 
 > Conflict: ***NO***
+
+## ORDER_BY_CLAUSE
+
+### influxdb
+
+```EBNF
+order_by_clause = ORDER BY sort_fields .
+sort_fields     = sort_field { "," sort_field } .
+sort_field      = identify [ ASC | DESC ] .
+```
+
+### postgresql
+
+```EBNF
+order_by_clause = ORDER BY sort_fields .
+sort_fields     = sort_field { "," sort_field } .
+sort_field      = identify [ ASC | DESC | USING operator ] [ NULL { FIRST | LAST } ].
+operator        = "<" | ">" | "<=" | ">=" | "=" .
+```
+
+### Conclusion
+
+> Conflict: ***NO***
+
+## LIMIT_CLAUSE
+
+## OFFSET_CLAUSE
+
+## SLIMIT_CLAUSE
+
+## SOFFSET_CLAUSE
+
+## TIMEZONE_CLAUSE
 
 # Exceptions
 
