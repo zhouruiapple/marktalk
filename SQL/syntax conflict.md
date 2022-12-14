@@ -1,8 +1,16 @@
 # Abstract
 
+以postgresql作为`标准SQL`，分析influxdb的`InfluxQL`查询语言语法上与`标准SQL`的差异和冲突。
+
+语法冲突分析遵循`3`个关键规则：
+
+- `标准SQL`中存在，`InfluxQL`中不存在的语法，不会冲突；
+- `InfluxQL`中存在，`标准SQL`中不存在的语法，当`标准SQL`扩展时会冲突；
+- 在`标准SQL`和`InfluxQL`同时存在的语法，当语义不同时会冲突；
+
 # Notation
 
-Extended Backus-Naur Form (“EBNF”). 
+使用Extended Backus-Naur Form (“EBNF”)来描述语法. 
 
 ```EBNF
 Production  = production_name "=" [ Expression ] "." .
@@ -14,7 +22,7 @@ Option      = "[" Expression "]" .
 Repetition  = "{" Expression "}" .
 ```
 
-Notation operator.
+EBNF操作符，
 
 ```EBNF
 |   alternation
@@ -25,7 +33,7 @@ Notation operator.
 
 # Query Representation
 
-Unicode text encoded in **UTF-8**
+使用`UTF-8`对查询文本进行编码，文本由一下两个部分组成，
 
 ```EBNF
 newline             = /* the Unicode code point U+000A */ .
@@ -151,7 +159,7 @@ string_line         = `'` { unicode_char } `'` .
 
 ### Conclusion
 
-- `\'`转义符和多行拼接字符串涉及词法解析冲突。
+- `\'`转义符和多行拼接字符串词法冲突。
 
 > Conflict: ***YES***
 
@@ -170,8 +178,6 @@ int_lit             = ( "1" … "9" ) { digit } .
 ```
 
 ### Conclusion
-
-- postgresql区分32位和64位，根据值域选择。influxdb只支持64位。
 
 > Conflict: ***NO***
 
@@ -369,6 +375,12 @@ query               = statement { ";" statement } .
 statement           = /* SQL 命令 */ .
 ```
 
+### Conclusion
+
+查询语句对应的`Statement`或`Clause`冲突时其必然冲突。
+
+> Conclusion: ***YES***
+
 # Statements
 
 ## SELECT
@@ -413,7 +425,6 @@ SELECT select_list_clause
 ### Conclusion
 
 - influxdb的子句集合不是postgresql的子句集合的子集，当postgresql扩展时可能会存在冲突。
-- 当子句冲突时，必然存在冲突。
 
 > Conflict: ***YES***
 
@@ -438,9 +449,7 @@ expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] i
 
 ### Conclusion
 
-- expr_as_list语法存在冲突。
-
-> conflict: ***YES***
+> conflict: ***NO***
 
 ## INTO_CLAUSE
 
@@ -495,7 +504,7 @@ join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER
 ### Conclusion
 
 - postgresql支持函数调用出现在FROM子句中，由于influxdb不支持且复杂，目前不分析。
-- from_items在postgresql中将多个源表进行笛卡尔积运算，在influxdb中降多个源表进行集合并运算。
+- from_items在postgresql中将多个源表进行笛卡尔积运算，在influxdb中降多个源表进行集合并运算，语法相同但是语义冲突。
 
 > Conflict: ***YES***
 
@@ -563,13 +572,87 @@ operator        = "<" | ">" | "<=" | ">=" | "=" .
 
 ## LIMIT_CLAUSE
 
+### influxdb
+
+```EBNF
+limit_clause    = LIMIT int_lit .
+```
+
+### postgresql
+
+```EBNF
+limit_clause    = LIMIT ( int_lit | ALL ).
+```
+
+### Conclusion
+
+> Conflict: ***NO***
+
 ## OFFSET_CLAUSE
+
+### influxdb
+
+```EBNF
+offset_clause   = OFFSET int_lit .
+```
+
+### postgresql
+
+```EBNF
+offset_clause   = OFFSET int_lit ( ROW | ROWS ) FETCH ( FIRST | NEXT ) [ int_lit ] ( ROW | ROWS ) ( ONLY | WITH TIES ) .
+```
+
+### Conclusion
+
+> Conflict: ***NO***
 
 ## SLIMIT_CLAUSE
 
+### influxdb
+
+```EBNF
+slimit_clause    = SLIMIT int_lit .
+```
+
+### postgresql
+
+***Not supported***
+
+### Conclusion
+
+> Conflict: ***YES***
+
 ## SOFFSET_CLAUSE
 
+### influxdb
+
+```EBNF
+soffset_clause   = SOFFSET int_lit .
+```
+
+### postgresql
+
+***Not supported***
+
+### Conclusion
+
+> Conflict: ***YES***
+
 ## TIMEZONE_CLAUSE
+
+### influxdb
+
+```EBNF
+timezone_clause = tz(string_lit) .
+```
+
+### postgresql
+
+***Not supported***
+
+### Conclusion
+
+> Conflict: ***YES***
 
 # Exceptions
 
