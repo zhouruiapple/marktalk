@@ -42,14 +42,16 @@ unicode_char        = /* an arbitrary Unicode code point except newline */ .
 
 # Letters and Digits
 
-### influxdb
+`influxdb`
+
 ```EBNF
 letter              = ascii_letter | "_" .
 ascii_letter        = "A" … "Z" | "a" … "z" .
 digit               = "0" … "9" .
 ```
 
-### postgresql
+`postgresql`
+
 ```EBNF
 letter              = ascii_letter | "_" .
 ascii_letter        = "A" … "Z" | "a" … "z" .
@@ -57,7 +59,7 @@ digit               = "0" … "9" .
 dollar              = "$"
 ```
 
-### Conclusion
+`Conclusion`
 
 - influxdb目前不支持`美元引用的字符串常量`和`位置参数`，`$`不作为字母。
 
@@ -65,21 +67,23 @@ dollar              = "$"
 
 # Identifiers
 
-### influxdb
+`influxdb`
+
 ```EBNF
 identifier          = unquoted_identifier | quoted_identifier .
 unquoted_identifier = ( letter ) { letter | digit } .
 quoted_identifier   = `"` unicode_char { unicode_char } `"` .
 ```
 
-### postgresql
+`postgresql`
+
 ```EBNF
 identifier          = unquoted_identifier | quoted_identifier .
 unquoted_identifier = ( letter ) { letter | digit | dollar } .
 quoted_identifier   = `"` unicode_char { unicode_char } `"` .
 ```
 
-### Conclusion
+`Conclusion`
 
 - influxdb标识符不包含`$`。postgresql标识符中可以包含`$`，但是不推荐使用`$`。
 
@@ -87,7 +91,8 @@ quoted_identifier   = `"` unicode_char { unicode_char } `"` .
 
 # Keywords
 
-### influxdb
+`influxdb`
+
 ```SQL
 ALL           ALTER         ANY           AS            ASC           BEGIN
 BY            CREATE        CONTINUOUS    DATABASE      DATABASES     DEFAULT
@@ -104,11 +109,11 @@ TO            USER          USERS         VALUES        WHERE         WITH
 WRITE
 ```
 
-### postgresql
+`postgresql`
 
 [附录 C. SQL关键词](http://postgres.cn/docs/14/sql-keywords-appendix.html)
 
-### Conclusion
+`Conclusion`
 
 - influxdb关键字不是postgresql的真子集，如MEASUREMENT，MEASUREMENTS，REPLICATION等，未来postgresql扩展时，可能会冲突。
 
@@ -116,19 +121,19 @@ WRITE
 
 # Symbol
 
-### influxdb
+`influxdb`
 
 ```
 + - * / < > = % ^ & | ( ) , ; * .
 ```
 
-### postgresql
+`postgresql`
 
 ```
 + - * / < > = ~ ! @ # % ^ & | ` ? $ ( ) [ ] , ; : * .
 ```
 
-### Conclusion
+`Conclusion`
 
 - influxdb的符号集合是postgresql的真子集，无冲突。
 
@@ -138,7 +143,7 @@ WRITE
 
 ## String
 
-### influxdb
+`influxdb`
 
 字符串常量中包含`'`，转义符为`\'`。
 
@@ -146,7 +151,7 @@ WRITE
 string_lit          = `'` { unicode_char } `'` .
 ```
 
-### postgresql
+`postgresql`
 
 字符串常量中包含`'`，转义符为`''`和`\'`。
 
@@ -157,7 +162,7 @@ string_lit          = string_line [newline string_line] .
 string_line         = `'` { unicode_char } `'` .
 ```
 
-### Conclusion
+`Conclusion`
 
 - `\'`转义符和多行拼接字符串词法冲突。
 
@@ -165,31 +170,31 @@ string_line         = `'` { unicode_char } `'` .
 
 ## Integer
 
-### influxdb
+`influxdb`
 
 ```EBNF
 int_lit             = ( "1" … "9" ) { digit } .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 int_lit             = ( "1" … "9" ) { digit } .
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## Float
 
-### influxdb
+`influxdb`
 
 ```EBNF
 float_lit         = int_lit "." int_lit ["e" ["+"|"-"] int_lit] .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 float_lit           = (int_lit | float_basic | float_decimal | float_integral) ["e" ["+"|"-"] int_lit] .
@@ -197,7 +202,8 @@ float_integral      = int_lit "." [int_lit]
 float_decimal       = [int_lit] "." int_lit
 float_basic         = int_lit "." int_lit
 ```
-### Conclusion
+
+`Conclusion`
 
 - postgresql中一个不包含小数点和指数的数字常量的值适合类型integer（32 位），它首先被假定为类型integer。否则如果它的值适合类型bigint（64 位），它被假定为类型bigint。再否则它会被取做类型numeric。包含小数点和/或指数的常量总是首先被假定为类型numeric。
 
@@ -205,7 +211,7 @@ float_basic         = int_lit "." int_lit
 
 ## Duration
 
-### influxdb
+`influxdb`
 
 ```EBNF
 duration_lit        = int_lit duration_unit .
@@ -223,7 +229,7 @@ duration_unit       = "ns" | "u" | "µ" | "ms" | "s" | "m" | "h" | "d" | "w" .
 | d | day |
 | w | week |
 
-### postgresql
+`postgresql`
 
 [日期/时间类型](http://postgres.cn/docs/14/datatype-datetime.html)中`interval`类型有一个附加选项，它可以通过写下面之一的短语来限制存储的fields的集合：
 
@@ -243,25 +249,25 @@ HOUR TO SECOND
 MINUTE TO SECOND
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***YES***
 
 ## Date & Time
 
-### influxdb
+`influxdb`
 
 ```EBNF
 time_lit            = "YYYY-MM-DD hh:mm:ss.p" | "YYYY-MM-DD" .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 time_lit            = "YYYY-MM-DD hh:mm:ss.p" | "YYYY-MM-DD" .
 ```
 
-### Conclusion
+`Conclusion`
 
 - postgresql的日期和时间的输入可以接受几乎任何合理的格式，包括 ISO 8601、SQL-兼容的和其他的形式。influxdb的日期时间格式只支持RFC 3339。
 
@@ -269,19 +275,19 @@ time_lit            = "YYYY-MM-DD hh:mm:ss.p" | "YYYY-MM-DD" .
 
 ## Boolean
 
-### influxdb
+`influxdb`
 
 ```EBNF
 bool_lit            = TRUE | FALSE .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 bool_lit            = TRUE | FALSE .
 ```
 
-### Conclusion
+`Conclusion`
 
 - postgresql的类型转换支持将一下字符串表示位”真“或”假“状态：
 
@@ -296,20 +302,20 @@ bool_lit            = TRUE | FALSE .
 
 ## Regular Expression
 
-### influxdb
+`influxdb`
 
 ```EBNF
 regex_lit           = "/" { unicode_char } "/" .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 regex_lit          = regex_line [newline regex_line] .
 regex_line         = `'` { unicode_char } `'` .
 ```
 
-### Conclusion
+`Conclusion`
 
 - postgresql在[模式匹配](http://postgres.cn/docs/14/functions-matching.html)定义正则表达式为字符串。
 
@@ -317,7 +323,8 @@ regex_line         = `'` { unicode_char } `'` .
 
 # Queries
 
-### influxdb
+`influxdb`
+
 ```EBNF
 query               = statement { ";" statement } .
 statement           = alter_retention_policy_stmt |
@@ -367,7 +374,7 @@ statement           = alter_retention_policy_stmt |
                       show_users_stmt .
 ```
 
-### postgresql
+`postgresql`
 
 参考支持的[SQL 命令](http://postgres.cn/docs/14/sql-commands.html)
 ```EBNF
@@ -375,7 +382,7 @@ query               = statement { ";" statement } .
 statement           = /* SQL 命令 */ .
 ```
 
-### Conclusion
+`Conclusion`
 
 查询语句对应的`Statement`或`Clause`冲突时其必然冲突。
 
@@ -385,7 +392,7 @@ statement           = /* SQL 命令 */ .
 
 ## SELECT
 
-### influxdb
+`influxdb`
 
 ```EBNF
 select_stmt = 
@@ -403,7 +410,7 @@ SELECT select_list_clause
     [ timezone_clause ] .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 select_stmt = [ WITH [ RECURSIVE ] with_query [, ...] ]
@@ -422,7 +429,7 @@ SELECT select_list_clause
     [ FOR { UPDATE | NO KEY UPDATE | SHARE | KEY SHARE } [ OF table_name [, ...] ] [ NOWAIT | SKIP LOCKED ] [...] ]
 ```
 
-### Conclusion
+`Conclusion`
 
 - influxdb的子句集合不是postgresql的子句集合的子集，当postgresql扩展时可能会存在冲突。
 
@@ -432,14 +439,14 @@ SELECT select_list_clause
 
 ## SELECT_LIST_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 select_list_clause     = [ "*" | expr_as_list ] .
 expr_as_list           = expression [ AS identify ] {, expression [ AS identify ]} .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 select_list_clause     = [ ALL | DISTINCT [ ON ( expr_list ) ] ] [ "*" | expr_as_list ] .
@@ -447,13 +454,13 @@ expr_list              = expression {, expression} .
 expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] identify ]} .
 ```
 
-### Conclusion
+`Conclusion`
 
 > conflict: ***NO***
 
 ## INTO_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 into_clause     = INTO ( table_name | back_ref ).
@@ -462,20 +469,20 @@ back_ref        = ( identify ".:MEASUREMENT" ) |
 table_name      = identify {"." identify} .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 into_clause     = INTO [ TEMPORARY | TEMP | UNLOGGED ] [ TABLE ] table_name .
 table_name      = identify {"." identify} .
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## FROM_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 from_clause     = FROM from_items .
@@ -487,7 +494,7 @@ item_subquery   = "(" select_stmt ")" [ AS identify ] .
 join_type       = FULL [ OUTER ] JOIN .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 from_clause     = FROM from_items .
@@ -501,7 +508,7 @@ item_cte        = identify [ [ AS ] identify [ "(" identify {"," identify} ")" ]
 join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER ] JOIN ) | ( FULL [ OUTER ] JOIN ) | ( CROSS JOIN ) .
 ```
 
-### Conclusion
+`Conclusion`
 
 - postgresql支持函数调用出现在FROM子句中，由于influxdb不支持且复杂，目前不分析。
 - from_items在postgresql中将多个源表进行笛卡尔积运算，在influxdb中降多个源表进行集合并运算，语法相同但是语义冲突。
@@ -510,25 +517,25 @@ join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER
 
 ## WHERE_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 where_clause    = WHERE expression .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 where_clause    = WHERE expression .
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## GROUP_BY_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 group_by_clause     = GROUP BY grouping_element [ fill "(" fill_option ")" ] .
@@ -536,20 +543,20 @@ fill_option         = "null" | "none" | "previous" | int_lit | float_lit | "line
 grouping_element    = identify {, identify}
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 group_by_clause     = GROUP BY grouping_element
 grouping_element    = identify {, identify}
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## ORDER_BY_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 order_by_clause = ORDER BY sort_fields .
@@ -557,7 +564,7 @@ sort_fields     = sort_field { "," sort_field } .
 sort_field      = identify [ ASC | DESC ] .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 order_by_clause = ORDER BY sort_fields .
@@ -566,97 +573,90 @@ sort_field      = identify [ ASC | DESC | USING operator ] [ NULL { FIRST | LAST
 operator        = "<" | ">" | "<=" | ">=" | "=" .
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## LIMIT_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 limit_clause    = LIMIT int_lit .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 limit_clause    = LIMIT ( int_lit | ALL ).
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## OFFSET_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 offset_clause   = OFFSET int_lit .
 ```
 
-### postgresql
+`postgresql`
 
 ```EBNF
 offset_clause   = OFFSET int_lit ( ROW | ROWS ) FETCH ( FIRST | NEXT ) [ int_lit ] ( ROW | ROWS ) ( ONLY | WITH TIES ) .
 ```
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***NO***
 
 ## SLIMIT_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 slimit_clause    = SLIMIT int_lit .
 ```
 
-### postgresql
+`postgresql`
 
 ***Not supported***
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***YES***
 
 ## SOFFSET_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 soffset_clause   = SOFFSET int_lit .
 ```
 
-### postgresql
+`postgresql`
 
 ***Not supported***
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***YES***
 
 ## TIMEZONE_CLAUSE
 
-### influxdb
+`influxdb`
 
 ```EBNF
 timezone_clause = tz(string_lit) .
 ```
 
-### postgresql
+`postgresql`
 
 ***Not supported***
 
-### Conclusion
+`Conclusion`
 
 > Conflict: ***YES***
-
-# Exceptions
-
-# Other
-
-
-
