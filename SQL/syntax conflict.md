@@ -13,13 +13,13 @@
 使用Extended Backus-Naur Form (“EBNF”)来描述语法. 
 
 ```EBNF
-Production  = production_name "=" [ Expression ] "." .
-Expression  = Alternative { "|" Alternative } .
+Production  = production_name "=" [ expr ] "." .
+expr  = Alternative { "|" Alternative } .
 Alternative = Term { Term } .
 Term        = production_name | token [ "…" token ] | Group | Option | Repetition .
-Group       = "(" Expression ")" .
-Option      = "[" Expression "]" .
-Repetition  = "{" Expression "}" .
+Group       = "(" expr ")" .
+Option      = "[" expr "]" .
+Repetition  = "{" expr "}" .
 ```
 
 EBNF操作符，
@@ -136,6 +136,27 @@ WRITE
 `Conclusion`
 
 - influxdb的符号集合是postgresql的真子集，无冲突。
+
+> Conflict: ***NO***
+
+# Expression
+
+`influxdb`
+
+```EBNF
+binary_op        = "+" | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "AND" |
+                   "OR" | "=" | "!=" | "<>" | "<" | "<=" | ">" | ">=" .
+expr             = unary_expr { binary_op unary_expr } .
+unary_expr       = "(" expr ")" | var_ref | time_lit | string_lit | int_lit | float_lit | bool_lit | duration_lit | regex_lit .
+```
+
+`postgresql`
+
+***TODO***
+
+`Conclusion`
+
+- 未找到postgresql官方定义，经验上语法应该和influxdb一样，主要的区别在于`binary_op`的数量大于influxdb。
 
 > Conflict: ***NO***
 
@@ -453,13 +474,13 @@ timestamp       = { unicode_char }
 insert_stmt     = [ WITH [ RECURSIVE ] with_query [, ...] ]
 INSERT INTO table_name [ AS alias ] [ ( column_name [, ...] ) ]
     [ OVERRIDING { SYSTEM | USER } VALUE ]
-    { DEFAULT VALUES | VALUES ( { expression | DEFAULT } [, ...] ) [, ...] | query }
+    { DEFAULT VALUES | VALUES ( { expr | DEFAULT } [, ...] ) [, ...] | query }
     [ ON CONFLICT [ conflict_target ] conflict_action ]
-    [ RETURNING * | output_expression [ [ AS ] output_name ] [, ...] ] .
-conflict_target = ( { index_column_name | ( index_expression ) } [ COLLATE collation ] [ opclass ] [, ...] ) [ WHERE index_predicate ]
+    [ RETURNING * | output_expr [ [ AS ] output_name ] [, ...] ] .
+conflict_target = ( { index_column_name | ( index_expr ) } [ COLLATE collation ] [ opclass ] [, ...] ) [ WHERE index_predicate ]
     ON CONSTRAINT constraint_name
 conflict_action = DO NOTHING
-    DO UPDATE SET { column_name = { expression | DEFAULT } | ( column_name [, ...] ) = [ ROW ] ( { expression | DEFAULT } [, ...] ) | ( column_name [, ...] ) = ( sub-SELECT ) } [, ...] [ WHERE condition ]
+    DO UPDATE SET { column_name = { expr | DEFAULT } | ( column_name [, ...] ) = [ ROW ] ( { expr | DEFAULT } [, ...] ) | ( column_name [, ...] ) = ( sub-SELECT ) } [, ...] [ WHERE condition ]
 ```
 
 `Conclusion`
@@ -497,15 +518,15 @@ option          = ANALYZE [bool_lit] | VERBOSE [bool_lit] | COSTS [bool_lit] | S
 
 ```EBNF
 select_list_clause     = [ "*" | expr_as_list ] .
-expr_as_list           = expression [ AS identify ] {, expression [ AS identify ]} .
+expr_as_list           = expr [ AS identify ] {, expr [ AS identify ]} .
 ```
 
 `postgresql`
 
 ```EBNF
 select_list_clause     = [ ALL | DISTINCT [ ON ( expr_list ) ] ] [ "*" | expr_as_list ] .
-expr_list              = expression {, expression} .
-expr_as_list           = expression [ [ AS ] identify ] {, expression [ [ AS ] identify ]} .
+expr_list              = expr {, expr} .
+expr_as_list           = expr [ [ AS ] identify ] {, expr [ [ AS ] identify ]} .
 ```
 
 `Conclusion`
@@ -542,7 +563,7 @@ table_name      = identify {"." identify} .
 from_clause     = FROM from_items .
 from_items      = from_item {, from_item} .
 from_item       = item_table | item_subquery | item_cte | item_join .
-item_join       = from_item join_type from_item [ ON expression ] .
+item_join       = from_item join_type from_item [ ON expr ] .
 item_table      = table_name [ AS identify ] .
 item_subquery   = "(" select_stmt ")" [ AS identify ] .
 join_type       = FULL [ OUTER ] JOIN .
@@ -555,9 +576,9 @@ table_name      = identify {"." identify} .
 from_clause     = FROM from_items .
 from_items      = from_item {, from_item} .
 from_item       = item_table | item_subquery | item_cte | item_join .
-item_join       = from_item [ NATURAL ] join_type from_item [ ( ON expression ) | ( USING "(" identify {"," identify} ")" ) ] .
+item_join       = from_item [ NATURAL ] join_type from_item [ ( ON expr ) | ( USING "(" identify {"," identify} ")" ) ] .
 item_table      = [ ONLY ] table_name [ "*" ] [ [ AS ] identify [ "(" identify {"," identify} ")" ] ]
-    [ TABLESAMPLE identify "(" expression {"," expression} ")" [ REPEATABLE "(" expression ")" ] ] .
+    [ TABLESAMPLE identify "(" expr {"," expr} ")" [ REPEATABLE "(" expr ")" ] ] .
 item_subquery   = [ LATERAL ] "(" select_stmt ")" [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
 item_cte        = identify [ [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
 join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER ] JOIN ) | ( FULL [ OUTER ] JOIN ) | ( CROSS JOIN ) .
@@ -576,13 +597,13 @@ table_name      = identify {"." identify} .
 `influxdb`
 
 ```EBNF
-where_clause    = WHERE expression .
+where_clause    = WHERE expr .
 ```
 
 `postgresql`
 
 ```EBNF
-where_clause    = WHERE expression .
+where_clause    = WHERE expr .
 ```
 
 `Conclusion`
