@@ -435,6 +435,60 @@ SELECT select_list_clause
 
 > Conflict: ***YES***
 
+## INSERT
+
+`influxdb`
+
+```EBNF
+insert_stmt     = <measurement>[,<tag_key>=<tag_value>[,<tag_key>=<tag_value>]] <field_key>=<field_value>[,<field_key>=<field_value>] [<timestamp>]
+measurement     = { unicode_char }
+tag_set         = { unicode_char }
+field_set       = { unicode_char }
+timestamp       = { unicode_char }
+```
+
+`postgresql`
+
+```EBNF
+insert_stmt     = [ WITH [ RECURSIVE ] with_query [, ...] ]
+INSERT INTO table_name [ AS alias ] [ ( column_name [, ...] ) ]
+    [ OVERRIDING { SYSTEM | USER } VALUE ]
+    { DEFAULT VALUES | VALUES ( { expression | DEFAULT } [, ...] ) [, ...] | query }
+    [ ON CONFLICT [ conflict_target ] conflict_action ]
+    [ RETURNING * | output_expression [ [ AS ] output_name ] [, ...] ] .
+conflict_target = ( { index_column_name | ( index_expression ) } [ COLLATE collation ] [ opclass ] [, ...] ) [ WHERE index_predicate ]
+    ON CONSTRAINT constraint_name
+conflict_action = DO NOTHING
+    DO UPDATE SET { column_name = { expression | DEFAULT } | ( column_name [, ...] ) = [ ROW ] ( { expression | DEFAULT } [, ...] ) | ( column_name [, ...] ) = ( sub-SELECT ) } [, ...] [ WHERE condition ]
+```
+
+`Conclusion`
+
+- influxdb中`INSERT`是自定义`Line Protocol`语法，`Lex`将该语法的解析成4个部分，Measurement，Tag set，Field set，Timestamp。随后对这四个部分分别以`key-value`的形式解析，使用的是一套独立的词法和语法解析。
+
+> Conflict: ***NO***
+
+## EXPLAIN
+
+`influxdb`
+
+```EBNF
+explain_stmt    = EXPLAIN [option] select_stmt .
+option          = ANALYZE
+```
+
+`postgresql`
+
+```EBNF
+explain_stmt    = EXPLAIN [ options ] select_stmt .
+options         = option {, option}
+option          = ANALYZE [bool_lit] | VERBOSE [bool_lit] | COSTS [bool_lit] | SETTINGS [bool_lit] | BUFFERS [bool_lit] | WAL [bool_lit] | TIMING [bool_lit] | SUMMARY [bool_lit] | FORMAT [bool_lit]
+```
+
+`Conclusion`
+
+> Conflict: ***NO***
+
 # Clauses
 
 ## SELECT_LIST_CLAUSE
@@ -492,6 +546,7 @@ item_join       = from_item join_type from_item [ ON expression ] .
 item_table      = table_name [ AS identify ] .
 item_subquery   = "(" select_stmt ")" [ AS identify ] .
 join_type       = FULL [ OUTER ] JOIN .
+table_name      = identify {"." identify} .
 ```
 
 `postgresql`
@@ -506,6 +561,7 @@ item_table      = [ ONLY ] table_name [ "*" ] [ [ AS ] identify [ "(" identify {
 item_subquery   = [ LATERAL ] "(" select_stmt ")" [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
 item_cte        = identify [ [ AS ] identify [ "(" identify {"," identify} ")" ] ] .
 join_type       = ( [ INNER ] JOIN ) | ( LEFT [ OUTER ] JOIN ) | ( RIGHT [ OUTER ] JOIN ) | ( FULL [ OUTER ] JOIN ) | ( CROSS JOIN ) .
+table_name      = identify {"." identify} .
 ```
 
 `Conclusion`
