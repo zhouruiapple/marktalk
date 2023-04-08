@@ -106,9 +106,10 @@ Say each word aloud. This the first important step to complete mastery. As you h
 | extrovert | ˈɛkstrəʊvət | a person who is predominantly concerned with external things rather than with their own thoughts and feelings |
 | ambivert | ˈæmbɪvət | a person who is equally comfortable in both extroverted and introverted social situations |
 | misanthrope | ˈmɪsænθrəʊp | a person who dislikes humankind and avoids human society |
-| misogynist |  |  |
-| misogamist |  |  |
-| ascetic |  |  |
+| misogynist | ˈmɪsəʊdʒɪnɪst |  |
+| misogamist | ˈmɪsəʊɡəmɪst | a person who is opposed to marriage |
+| ascetic | ˈæsɪtɪk | a person who practices self-denial as a spiritual discipline |
+
 
 ### Can you work with the words?
 
